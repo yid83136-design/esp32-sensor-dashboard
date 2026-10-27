@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101b29">
+<title>一号板 · 实时温湿度</title>
+<style>
+:root{color-scheme:dark;--bg:#101b29;--card:#192738;--line:#2b3d51;--text:#edf4fc;--muted:#a9bdd1;--s:#62dfbc;--k:#bbadff;--warn:#f4c27b;--bad:#ffac9c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1120px;margin:auto;padding:25px 18px 40px}header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}
+.eyebrow{font-size:12px;letter-spacing:.13em;color:var(--s)}h1{font-size:27px;margin:3px 0 0}p{margin:6px 0;color:var(--muted)}button,input,select{font:inherit}
+button,select{min-height:42px;border:1px solid var(--line);border-radius:10px;background:#213348;color:var(--text);padding:8px 12px;cursor:pointer}
+button:hover,button:focus-visible,select:focus-visible,input:focus-visible{border-color:var(--s);outline:2px solid transparent}button:disabled{opacity:.55;cursor:wait}
+.connection{font-size:13px;white-space:nowrap}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warn);margin-right:7px}.connection.live .dot{background:var(--s)}
+[hidden]{display:none!important}.banner{border-radius:11px;padding:11px 14px;margin-bottom:15px;background:#513b23;border:1px solid #b89055;color:#fff0d0}
+.banner a{color:#aaffdf;word-break:break-all}.banner strong{display:block}.banner.error{background:#512e35;border-color:#ab6470}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card,.panel,.diff{border:1px solid var(--line);background:var(--card);border-radius:16px}
+.card{padding:18px 20px;border-top:3px solid var(--accent)}.card h2{font-size:16px;font-weight:600;margin:0 0 14px;display:flex;justify-content:space-between;gap:8px}.tag{font-size:12px;color:var(--muted);font-weight:400}
+.metrics{display:flex;gap:20px}.metric{flex:1}.value{font-size:35px;font-weight:620;font-variant-numeric:tabular-nums;letter-spacing:-.04em}.unit{font-size:15px;color:var(--muted);margin-left:4px}.caption,.sensor-note{font-size:13px;color:var(--muted)}.sensor-note{margin-top:11px;min-height:18px}.sensor-note.error{color:var(--bad)}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:11px;flex-wrap:wrap;margin:19px 0 12px}.tools,.legend{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.legend label{padding:7px 10px;background:var(--card);border:1px solid var(--line);border-radius:9px;cursor:pointer;font-size:13px}.legend input{accent-color:var(--color);margin:0 6px 0 0}
+.plots{display:grid;grid-template-columns:1fr 1fr;gap:14px}.panel{padding:16px 14px 12px;min-width:0}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.panel h2{font-size:16px;margin:0}.panel-head span{font-size:12px;color:var(--muted)}canvas{display:block;width:100%;height:240px;touch-action:manipulation}.chart-note{font-size:13px;color:var(--muted);min-height:20px}
+.diff{margin-top:14px;padding:14px 18px;color:var(--muted)}.diff b{color:var(--text);font-variant-numeric:tabular-nums}.foot{font-size:13px;line-height:1.65;margin-top:12px}
+.network{margin-top:21px;border-top:1px solid var(--line);padding-top:16px}.network summary{cursor:pointer;font-weight:600}.network-content{max-width:730px;margin-top:12px}.network p{font-size:14px}
+form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin:13px 0}label.field{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}input[type=text],input[type=password]{width:100%;min-height:42px;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:8px 11px}form button{align-self:end;background:#245e52}#wifi-message{min-height:22px;color:var(--s);font-size:13px}a{color:var(--s)}
+@media(max-width:760px){main{padding:18px 14px 30px}h1{font-size:23px}header{gap:8px}.connection{font-size:12px;padding-top:3px}.cards,.plots{grid-template-columns:1fr}.card{padding:13px 16px;display:grid;grid-template-columns:125px 1fr;gap:0 10px}.card h2{display:block;margin:0}.tag{display:block;margin-top:2px}.value{font-size:29px}.metrics{gap:12px}.sensor-note{grid-column:1/-1;margin-top:6px;min-height:0}.toolbar{margin-top:17px}.tools{width:100%}.tools select,.tools button{font-size:13px;padding:8px 10px}canvas{height:230px}form{grid-template-columns:1fr}form button{justify-self:start}}
+@media(max-width:370px){.card{grid-template-columns:100px 1fr}.value{font-size:25px}.unit{font-size:12px}.metrics{gap:7px}}
+</style>
+</head>
+<body><main>
+<header><div><div class="eyebrow">ESP32 / BOARD 01</div><h1>温度与湿度，实时对照</h1><p>SHT3x 与 MAX6675 · 每 2 秒采样</p></div><div id="connection" class="connection" role="status"><i class="dot"></i><span id="connection-text">正在连接</span></div></header>
+<div id="demo" class="banner" hidden>本地界面测试：模拟数据，不是设备实测。</div>
+<div id="switch-banner" class="banner" hidden><strong id="switch-title">设备网络已切换</strong><span id="switch-detail"></span> <a id="switch-link" href="#">打开新地址</a></div>
+<div id="health-banner" class="banner error" hidden></div>
+<section class="cards" aria-label="实时读数">
+<article class="card" style="--accent:var(--s)"><h2>SHT3x <span class="tag">环境温湿度</span></h2><div class="metrics"><div class="metric"><div class="value"><span id="st">--</span><span class="unit">°C</span></div><div class="caption">温度</div></div><div class="metric"><div class="value"><span id="sh">--</span><span class="unit">%RH</span></div><div class="caption">相对湿度</div></div></div><div id="note-s" class="sensor-note">等待第一组数据</div></article>
+<article class="card" style="--accent:var(--k)"><h2>MAX6675 <span class="tag">K 型热电偶</span></h2><div class="metrics"><div class="metric"><div class="value"><span id="kt">--</span><span class="unit">°C</span></div><div class="caption">探头温度</div></div></div><div id="note-k" class="sensor-note">只测温度，不测湿度</div></article>
+</section>
+<div class="toolbar"><div class="legend" aria-label="选择显示的传感器"><label style="--color:var(--s)"><input type="checkbox" id="show-s" checked>SHT3x</label><label style="--color:var(--k)"><input type="checkbox" id="show-k" checked>MAX6675</label></div><div class="tools"><select id="window" aria-label="曲线时间范围"><option value="60">1 分钟</option><option value="300" selected>5 分钟</option><option value="1800">30 分钟</option><option value="3600">1 小时</option><option value="21600">6 小时</option><option value="86400">24 小时</option></select><select id="temp-scale" aria-label="温度曲线刻度"><option value="shared">温度共轴</option><option value="air">只看环境</option><option value="probe">只看探头</option></select><button id="pause">暂停刷新</button><button id="export">导出 CSV</button><button id="export-xlsx">导出 Excel</button></div></div>
+<section class="plots"><article class="panel"><div class="panel-head"><h2>温度趋势</h2><span id="temp-axis-label">°C · 自动缩放</span></div><canvas id="temp-chart" aria-label="温度趋势图"></canvas><div id="temp-hint" class="chart-note">点击曲线查看时间与读数</div></article><article class="panel"><div class="panel-head"><h2>湿度趋势</h2><span>%RH · 自动缩放</span></div><canvas id="humidity-chart" aria-label="SHT3x 湿度趋势图"></canvas><div id="humidity-hint" class="chart-note">点击曲线查看时间与读数</div></article></section>
+<section class="diff">探头 − 环境温度　<b id="delta-k">--</b></section>
+<p class="foot" id="sample-info">等待设备采样。</p><p class="foot" id="storage-info">正在检查浏览器记录功能。</p>
+<p class="foot">曲线纵轴会自动缩放；微小变化可能看起来很大。时间由本手机接收时估算，约有秒级误差。设备本身只保留约 5 分钟；浏览器页面打开期间可保存最近 24 小时，关页后不能继续采样。地址变化时，浏览器记录可能分属不同地址；重要记录请导出 CSV 或 Excel。</p>
+<details class="network"><summary>连接方式与 Wi‑Fi 设置</summary><div class="network-content"><p>板子连上已保存的路由器或手机热点后，会关闭自己的 <b>ESP32-Sensors-1</b> 热点。请让手机处在同一网络，用 OLED 显示的完整 IP 打开网页。若尚未连上，手机可连设备热点 <b>ESP32-Sensors-1</b>，密码 <b>88888888</b>，访问 <b>http://192.168.4.1</b>。</p><p id="network-status">正在读取联网状态。</p><p>任何能打开页面的人都可以修改板子的 Wi‑Fi。保存新网络会改变访问地址，并可能让其他人的页面暂时断开。</p><form id="wifi-form"><label class="field">Wi‑Fi 名称<input id="wifi-ssid" type="text" maxlength="32" autocomplete="off" required placeholder="2.4 GHz Wi‑Fi 名称"></label><label class="field">Wi‑Fi 密码<input id="wifi-password" type="password" minlength="8" maxlength="63" value="88888888" autocomplete="new-password" required></label><button id="wifi-save" type="submit">保存并连接</button></form><button id="hotspot-only" type="button">仅使用设备热点</button><p id="wifi-message" role="status"></p><p>设备最多保存 4 个你明确输入的网络；全部失败后约一分钟再试。支持 mDNS 的设备可尝试 <b>http://esp32-sensors.local</b>，实际使用以屏幕 IP 为准。</p></div></details>
+</main><script src="/app.js"></script></body>
+</html>

@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+sensor_wifi_settings.json
+wifi_config.py
+preview_wifi_settings.json
+backups/
+wifi_live_check.json
+wifi_start_trace.txt
+网页导出测试_*
+手机网页预览_模拟数据.png
+电脑网页预览_模拟数据.png
